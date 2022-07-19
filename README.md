@@ -68,7 +68,7 @@ bash scripts/script_train_YCBV_stage1.sh
 **|--- |--- LMO_Masks:** The masks for the evaluation of Occlusion LineMOD(the prediction of [HybridPose](https://github.com/chensong1995/HybridPose). \
 **|--- |--- YCB_Video_Dataset:** The YCB-Video dataset. \
 **|--- |--- YCBV_Masks:** The masks for the evaluation of YCB-Video dataset. \
-**|--- |--- |--- Masks_PVN3D:** The masks predicted by PVN3D. 
+**|--- |--- |--- Masks_PVN3D:** The masks predicted by PVN3D. \
 **|--- |--- |--- Masks_FFB6D:** The masks predicted by FFB6D. 
 
 **|--- LM:** \
