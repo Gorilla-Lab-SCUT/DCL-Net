@@ -1,0 +1,68 @@
+NAME_PROJECT: DCL-Net for YCBV
+optimizer:
+  type : Adam
+  lr   : 0.001
+  betas: [0.5, 0.999]
+  eps  : 0.000001
+
+lr_scheduler:
+  type     : WarmupCyclicLR
+  max_lr   : 0.001
+  base_lr  : 0.00001
+lr_scheduler_cyc:
+  max_lr   : 0.001
+  base_lr  : 0.000001
+  step_size_up: 50484  # 21 epoch 
+  step_size_down: 50484
+
+max_epoch : 210
+
+model:
+  voxelization_mode: 4
+  unit_voxel_extent: [0.006, 0.006, 0.006]
+  voxel_num_limit  : [64, 64, 64]
+  n_inp            : 1024
+  n_tmp            : 1024
+  backbone:
+    downsample_by_pooling: True
+    kernel_size     : 3
+    bias            : False
+loss:
+
+
+
+hyper_dataset_train:
+  name          : dataloader_train_YCBV
+  input_size    : 1024
+  tmp_size      : 1024
+  unit_voxel_extent: [0.006, 0.006, 0.006]
+  voxel_num_limit  : [64, 64, 64]
+  voxelization_mode: 4
+
+hyper_dataloader_train:
+  bs            : 40
+  num_workers   : 10
+  shuffle       : True
+  drop_last     : True
+  pin_memory    : False
+
+hyper_dataset_test:
+  name          : dataloader_test_YCBV
+  input_size    : 1024
+  tmp_size      : 1024
+  unit_voxel_extent: [0.006, 0.006, 0.006]
+  voxel_num_limit  : [64, 64, 64]
+  voxelization_mode: 4
+
+hyper_dataloader_test:
+  bs            : 1
+  num_workers   : 8
+  shuffle       : False
+  drop_last     : False
+  pin_memory    : False
+
+
+per_val: 1 
+per_write: 10
+rd_seed: 1
+per_save : 1

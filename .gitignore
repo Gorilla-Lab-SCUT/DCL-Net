@@ -1,0 +1,11 @@
+datasets/*
+build/
+dist/
+*.so
+*.so.1.0
+*.so.1
+*.egg-info
+*.pyc
+DCL_Net_config_LM_id0/
+DCL_Net_config_YCBV_bs32_id0/
+refiner_refiner_config_YCBV_bs40_id0_model_DCL_Net_config_YCBV_bs32_id0_epoch_84/
