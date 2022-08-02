@@ -208,8 +208,8 @@ def test(model, refiner, iteration, cfg, logger):
                 points_inp       = data["labels"]['points_inp'].cuda()
                 cur_cld          = cld[cls_label.long().cuda()[all_flags.cuda()==1]]
                 points_inp_cur           = torch.bmm(points_inp-trans_cur.unsqueeze(1), rot_cur)
-                point_feats_inp_RE_embed = outputs_main["point_feats_inp_RE_embed"]
-                inp_refiner              = torch.cat([points_inp_cur.transpose(1,2), point_feats_inp_RE_embed], dim = 1).detach()
+                F_Xo_p = outputs_main["F_Xo_p"]
+                inp_refiner              = torch.cat([points_inp_cur.transpose(1,2), F_Xo_p], dim = 1).detach()
                 conf                     = outputs_main["conf"]
                 for i in range(iteration):
                     dict_inp_refiner = {}
@@ -222,7 +222,7 @@ def test(model, refiner, iteration, cfg, logger):
                     trans_cur   = (rot_cur @ trans_ref.unsqueeze(2)).squeeze(2) + trans_cur
                     rot_cur     = rot_cur @ rot_ref
                     points_inp_cur = torch.bmm(points_inp-trans_cur.unsqueeze(1), rot_cur)
-                    inp_refiner    = torch.cat([points_inp_cur.transpose(1,2), point_feats_inp_RE_embed], dim = 1).detach()
+                    inp_refiner    = torch.cat([points_inp_cur.transpose(1,2), F_Xo_p], dim = 1).detach()
 
             points_tmp = data["labels"]["points_tmp"]
             rot_pred   = rot_cur

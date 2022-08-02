@@ -66,47 +66,47 @@ class Network(nn.Module):
         Basiclock_1x1 = partial(
             BasicBlock_3DCONV, **common_param_decouple
         )
-        self.decouple_RE_inp = nn.Sequential(*[
+        self.disengage_Xc_p1 = nn.Sequential(*[
             Basiclock_1x1(dim_in = 480, dim_out = 256),
             Basiclock_1x1(dim_in = 256, dim_out = 256) 
         ])
-        self.decouple_RI_inp = nn.Sequential(*[
+        self.disengage_Xc_m1 = nn.Sequential(*[
             Basiclock_1x1(dim_in = 480, dim_out = 256),
             Basiclock_1x1(dim_in = 256, dim_out = 64) ,
         ])
-        self.decouple_RE_tmp = nn.Sequential(*[
+        self.disengage_Yo_p1 = nn.Sequential(*[
             Basiclock_1x1(dim_in = 480, dim_out = 256),
             Basiclock_1x1(dim_in = 256, dim_out = 256) 
         ])
-        self.decouple_RI_tmp = nn.Sequential(*[
+        self.disengage_Yo_m1 = nn.Sequential(*[
             Basiclock_1x1(dim_in = 480, dim_out = 256),
             Basiclock_1x1(dim_in = 256, dim_out = 64) ,
         ])
         
-        self.decouple_RE_inp_bi = nn.Sequential(*[
+        self.disengage_Xc_p2 = nn.Sequential(*[
             Basiclock_1x1(dim_in = 480, dim_out = 256),
             Basiclock_1x1(dim_in = 256, dim_out = 256) 
         ])
-        self.decouple_RI_inp_bi = nn.Sequential(*[
+        self.disengage_Xc_m2 = nn.Sequential(*[
             Basiclock_1x1(dim_in = 480, dim_out = 256),
             Basiclock_1x1(dim_in = 256, dim_out = 64) ,
         ])
-        self.decouple_RE_tmp_bi = nn.Sequential(*[
+        self.disengage_Yo_p2 = nn.Sequential(*[
             Basiclock_1x1(dim_in = 480, dim_out = 256),
             Basiclock_1x1(dim_in = 256, dim_out = 256)
         ])
-        self.decouple_RI_tmp_bi = nn.Sequential(*[
+        self.disengage_Yo_m2 = nn.Sequential(*[
             Basiclock_1x1(dim_in = 480, dim_out = 256),
             Basiclock_1x1(dim_in = 256, dim_out = 64) ,
         ])
         self.neck_cross_att         = Aligner()
-        self.regressor_cano          = Head_MultiLayerPerceptron(
+        self.regressor_Xo          = Head_MultiLayerPerceptron(
             [  256,  256  ,  128  ,  3    ],
             [     "relu", "relu", "none"],
             [      False,  False,  False],
             [      0.0  ,  0.0  ,  0.0  ],
         )
-        self.regressor_PR            = Head_MultiLayerPerceptron(
+        self.regressor_Yc            = Head_MultiLayerPerceptron(
             [  256,  256  ,  128  ,  3    ],
             [     "relu", "relu", "none"],
             [      False,  False,  False],
@@ -181,59 +181,58 @@ class Network(nn.Module):
         
         points_inp = points_inp.view(b, self.n_inp, 3)
         points_inp = points_inp[:,:self.n_inp, :].reshape(-1, 3)
-        
-        batch_ids_inp   = torch.arange(b).unsqueeze(1).repeat(1, points_inp.size(0)//b).cuda().view(-1, 1)
-        point_feats_inp = self.stage1_get_point_feats(points_inp, batch_ids_inp, feats1_inp, feats2_inp, feats3_inp, feats4_inp)
+        batch_ids_inp = torch.arange(b).unsqueeze(1).repeat(1, points_inp.size(0)//b).cuda().view(-1, 1)
+        F_Xc = self.stage1_get_point_feats(points_inp, batch_ids_inp, feats1_inp, feats2_inp, feats3_inp, feats4_inp)
 
         # bi-direction FDA
-        point_feats_inp = point_feats_inp.view(b, self.n_inp, -1).transpose(1,2)[:,:,:, None, None]
-        point_feats_inp_RE = self.decouple_RE_inp(point_feats_inp).squeeze(-1).squeeze(-1)
-        point_feats_inp_RI = self.decouple_RI_inp(point_feats_inp).squeeze(-1).squeeze(-1)
-        point_feats_inp_RE_bi = self.decouple_RE_inp_bi(point_feats_inp).squeeze(-1).squeeze(-1)
-        point_feats_inp_RI_bi = self.decouple_RI_inp_bi(point_feats_inp).squeeze(-1).squeeze(-1)
+        F_Xc = F_Xc.view(b, self.n_inp, -1).transpose(1,2)[:,:,:, None, None]
+        F_Xc_p1 = self.disengage_Xc_p1(F_Xc).squeeze(-1).squeeze(-1)
+        F_Xc_m1 = self.disengage_Xc_m1(F_Xc).squeeze(-1).squeeze(-1)
+        F_Xc_p2 = self.disengage_Xc_p2(F_Xc).squeeze(-1).squeeze(-1)
+        F_Xc_m2 = self.disengage_Xc_m2(F_Xc).squeeze(-1).squeeze(-1)
 
         batch_ids_tmp   = torch.arange(b).unsqueeze(1).repeat(1, points_tmp.size(0)//b).cuda().view(-1, 1)
-        point_feats_tmp = self.stage1_get_point_feats(points_tmp, batch_ids_tmp, feats1_tmp, feats2_tmp, feats3_tmp, feats4_tmp)
-        point_feats_tmp = point_feats_tmp.view(b, self.n_tmp, -1).transpose(1,2)[:,:,:, None, None]
-        point_feats_tmp_RE = self.decouple_RE_tmp(point_feats_tmp).squeeze(-1).squeeze(-1)
-        point_feats_tmp_RI = self.decouple_RI_tmp(point_feats_tmp).squeeze(-1).squeeze(-1)
-        point_feats_tmp_RE_bi = self.decouple_RE_tmp_bi(point_feats_tmp).squeeze(-1).squeeze(-1)
-        point_feats_tmp_RI_bi = self.decouple_RI_tmp_bi(point_feats_tmp).squeeze(-1).squeeze(-1)
+        F_Yo = self.stage1_get_point_feats(points_tmp, batch_ids_tmp, feats1_tmp, feats2_tmp, feats3_tmp, feats4_tmp)
+        F_Yo = F_Yo.view(b, self.n_tmp, -1).transpose(1,2)[:,:,:, None, None]
+        F_Yo_p1 = self.disengage_Yo_p1(F_Yo).squeeze(-1).squeeze(-1)
+        F_Yo_m1 = self.disengage_Yo_m1(F_Yo).squeeze(-1).squeeze(-1)
+        F_Yo_p2 = self.disengage_Yo_p2(F_Yo).squeeze(-1).squeeze(-1)
+        F_Yo_m2 = self.disengage_Yo_m2(F_Yo).squeeze(-1).squeeze(-1)
         
         points_tmp = points_tmp.view(b, self.n_tmp, -1)
         points_inp = points_inp.view(b, self.n_inp, -1)
         RGB_tmp    = RGB_tmp.view(b, self.n_tmp, -1)
         RGB_inp    = RGB_inp.view(b, self.n_inp, -1)
-        point_feats_inp_RE_embed, attention_map = self.neck_cross_att(point_feats_inp_RI, point_feats_tmp_RI, point_feats_tmp_RE)
-        cano_pred    = self.regressor_cano(point_feats_inp_RE_embed)
+        F_Xo_p, attention_map = self.neck_cross_att(F_Xc_m1, F_Yo_m1, F_Yo_p1)
+        Xo_pred = self.regressor_Xo(F_Xo_p)
         
-        point_feats_tmp_RE_embed_bi, attention_map_bi = self.neck_cross_att(point_feats_tmp_RI_bi, point_feats_inp_RI_bi, point_feats_inp_RE_bi)
-        PR_pred      = self.regressor_PR(point_feats_tmp_RE_embed_bi)
+        F_Yc_p, attention_map_bi = self.neck_cross_att(F_Yo_m2, F_Xc_m2, F_Xc_p2)
+        Yc_pred = self.regressor_Yc(F_Yc_p)
 
         # confidence
-        point_feats_inp_RI_embed = torch.bmm(point_feats_tmp_RI, attention_map)
-        point_feats_inp_RI_fused = torch.cat([point_feats_inp_RI, point_feats_inp_RI_embed], dim=1)
-        point_feats_tmp_RI_embed_bi = torch.bmm(point_feats_inp_RI_bi, attention_map_bi)
-        point_feats_inp_RI_fused_bi = torch.cat([point_feats_tmp_RI_embed_bi, point_feats_tmp_RI_bi], dim=1)
-        conf_1 = self.regressor_conf(point_feats_inp_RI_fused)
-        conf_2 = self.regressor_conf_bi(point_feats_inp_RI_fused_bi)
+        F_Xo_m = torch.bmm(F_Yo_m1, attention_map)
+        F_m1 = torch.cat([F_Xc_m1, F_Xo_m], dim=1)
+        F_Yc_m = torch.bmm(F_Xc_m2, attention_map_bi)
+        F_m2 = torch.cat([F_Yc_m, F_Yo_m2], dim=1)
+        conf_1 = self.regressor_conf(F_m1)
+        conf_2 = self.regressor_conf_bi(F_m2)
         conf = torch.sigmoid(torch.cat([conf_1, conf_2], dim=2))
         conf_softmax = torch.softmax(conf, dim=2)
 
         # head
-        point_feats_RE_fused = torch.cat([point_feats_inp_RE, point_feats_inp_RE_embed], dim = 1)
-        point_feats_RE_fused_bi = torch.cat([point_feats_tmp_RE_embed_bi, point_feats_tmp_RE_bi], dim = 1)
-        point_feats_RE_fused    = self.neck_fuser(point_feats_RE_fused)
-        point_feats_RE_fused_bi = self.neck_fuser_bi(point_feats_RE_fused_bi)
-        point_feats_RE_fused_all= torch.cat([point_feats_RE_fused, point_feats_RE_fused_bi], dim = 2)
-        point_feats_RE_avg      = torch.sum(point_feats_RE_fused_all * conf_softmax, dim=2, keepdims=True)
+        F_p1 = torch.cat([F_Xc_p1, F_Xo_p], dim = 1)
+        F_p2 = torch.cat([F_Yc_p, F_Yo_p2], dim = 1)
+        F_p1 = self.neck_fuser(F_p1)
+        F_p2 = self.neck_fuser_bi(F_p2)
+        F_p = torch.cat([F_p1, F_p2], dim = 2)
+        F_p_wei = torch.sum(F_p * conf_softmax, dim=2, keepdims=True)
 
-        ortho6d_pred = self.regressor_rot(point_feats_RE_avg).squeeze(-1)
-        rot_x_pred   = ortho6d_pred[:, :3]
-        rot_y_pred   = ortho6d_pred[:, 3:6]
-        rot_z_pred   = ortho6d_pred[:, 6:]
+        ortho9d_pred = self.regressor_rot(F_p_wei).squeeze(-1)
+        rot_x_pred   = ortho9d_pred[:, :3]
+        rot_y_pred   = ortho9d_pred[:, 3:6]
+        rot_z_pred   = ortho9d_pred[:, 6:]
         rot_pred     = ortho9d2matrix(rot_x_pred, rot_y_pred, rot_z_pred)
-        trans_pred   = self.regressor_trans(point_feats_RE_avg).squeeze(-1)
+        trans_pred   = self.regressor_trans(F_p_wei).squeeze(-1)
 
         
         if self.mode == 'test':
@@ -241,7 +240,7 @@ class Network(nn.Module):
                     "trans_pred": trans_pred,
                     "rot_pred"  : rot_pred  ,
                     'conf': conf.squeeze(1),
-                    "point_feats_inp_RE_embed": point_feats_inp_RE_embed,
+                    "F_Xo_p": F_Xo_p,
             }
 
         else:
@@ -250,8 +249,8 @@ class Network(nn.Module):
                     "rot_pred"  : rot_pred  ,
                     'sym_flag'  : data['flags'].cuda(),
                     'conf'      : conf.squeeze(1),
-                    "cano_pred" : cano_pred.transpose(1,2),
-                    "PR_pred"   : PR_pred.transpose(1,2),
+                    "Xo_pred"   : Xo_pred.transpose(1,2),
+                    "Yc_pred"   : Yc_pred.transpose(1,2),
                 }
 
         data["labels"]["points_tmp"] = points_tmp
@@ -280,23 +279,23 @@ class losses(nn.Module):
 
         loss_pose = ((1-sym_flag).unsqueeze(1) * self.L2_Dis(points_tmp_posed_pred, points_tmp_posed_gt) + sym_flag.unsqueeze(1) * self.CD_Dis(points_tmp_posed_pred, points_tmp_posed_gt)).mean(dim = 1).mean()
 
-        cano_pred  = loss_inp_pred["cano_pred"]
-        PR_pred    = loss_inp_pred["PR_pred"]
+        Xo_pred  = loss_inp_pred["Xo_pred"]
+        Yc_pred    = loss_inp_pred["Yc_pred"]
         points_inp_posed_pred = (torch.bmm(points_inp-trans_pred.unsqueeze(1), rot_pred)).detach()
         points_inp_posed_gt = torch.bmm(points_inp-trans_gt.unsqueeze(1), rot_gt).detach()
-        loss_cano = (1-sym_flag).unsqueeze(1) * self.L2_Dis(cano_pred, points_inp_posed_gt) + 0.5 * sym_flag.unsqueeze(1) * (self.CD_Dis(cano_pred, points_tmp)+ self.L2_Dis(cano_pred, points_inp_posed_pred))
-        loss_cano1 = loss_cano.mean()
+        loss_Xo = (1-sym_flag).unsqueeze(1) * self.L2_Dis(Xo_pred, points_inp_posed_gt) + 0.5 * sym_flag.unsqueeze(1) * (self.CD_Dis(Xo_pred, points_tmp)+ self.L2_Dis(Xo_pred, points_inp_posed_pred))
+        loss_Xo_ = loss_Xo.mean()
         
-        loss_PR = (1-sym_flag).unsqueeze(1) * self.L2_Dis(PR_pred, points_tmp_posed_gt) + 0.5 * sym_flag.unsqueeze(1) * (self.CD_Dis(PR_pred, points_tmp_posed_gt)+ self.L2_Dis(PR_pred, points_tmp_posed_pred.detach()))
-        loss_PR1 = loss_PR.mean()
-        loss_conf = torch.mean(torch.cat([loss_cano, loss_PR], dim = 1).detach()*conf - 0.01 * torch.log(conf))
+        loss_Yc = (1-sym_flag).unsqueeze(1) * self.L2_Dis(Yc_pred, points_tmp_posed_gt) + 0.5 * sym_flag.unsqueeze(1) * (self.CD_Dis(Yc_pred, points_tmp_posed_gt)+ self.L2_Dis(Yc_pred, points_tmp_posed_pred.detach()))
+        loss_Yc_ = loss_Yc.mean()
+        loss_conf = torch.mean(torch.cat([loss_Xo, loss_Yc], dim = 1).detach()*conf - 0.01 * torch.log(conf))
 
-        loss_all  = loss_pose + 5*loss_cano1 + 1*loss_PR1 + 1*loss_conf
+        loss_all  = loss_pose + 5*loss_Xo_ + 1*loss_Yc_ + 1*loss_conf
 
         losses = {
             "loss_pose": loss_pose,
-            "loss_cano": loss_cano1,
-            "loss_PR"  : loss_PR1,
+            "loss_Xo"  : loss_Xo_,
+            "loss_Yc"  : loss_Yc_,
             "loss_conf": loss_conf,
             "loss_all" : loss_all
         }

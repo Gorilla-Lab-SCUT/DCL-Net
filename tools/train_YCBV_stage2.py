@@ -233,8 +233,8 @@ class Trainer(gorilla.solver.BaseSolver):
         cls_label        = data["labels"]["obj_idx"].squeeze(-1)
         cur_cld          = self.cld[cls_label.long()].cuda()
         points_inp_cur           = torch.bmm(points_inp-trans_cur.unsqueeze(1), rot_cur)
-        point_feats_inp_RE_embed = outputs_main["point_feats_inp_RE_embed"]
-        inp_refiner              = torch.cat([points_inp_cur.transpose(1,2), point_feats_inp_RE_embed], dim = 1).detach()
+        F_Xo_p = outputs_main["F_Xo_p"]
+        inp_refiner              = torch.cat([points_inp_cur.transpose(1,2), F_Xo_p], dim = 1).detach()
         for i in range(self.iteration):
             dict_inp_refiner= {}
             dict_inp_refiner["input_features"] = inp_refiner
@@ -266,7 +266,7 @@ class Trainer(gorilla.solver.BaseSolver):
             trans_cur   = (rot_cur @ trans_ref.unsqueeze(2)).squeeze(2) + trans_cur
             rot_cur     = rot_cur @ rot_ref
             points_inp_cur = torch.bmm(points_inp-trans_cur.unsqueeze(1), rot_cur)
-            inp_refiner    = torch.cat([points_inp_cur.transpose(1,2), point_feats_inp_RE_embed], dim = 1).detach()
+            inp_refiner    = torch.cat([points_inp_cur.transpose(1,2), F_Xo_p], dim = 1).detach()
         return loss_all, dict_info
 
     def get_logger_info(self, prefix, dict_info):

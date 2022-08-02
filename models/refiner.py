@@ -82,11 +82,11 @@ class Refiner(nn.Module):
         shared_feature = self.MLP_share(input_features)
         shared_feature = (shared_feature * conf_softmax).sum(dim=2, keepdim=True)
         
-        ortho6d_pred2   = self.regressor_rot2(shared_feature).squeeze(-1)
+        ortho9d_pred2   = self.regressor_rot2(shared_feature).squeeze(-1)
         delta_t         = self.regressor_trans2(shared_feature).squeeze(-1)
-        rot_x_pred2   = ortho6d_pred2[:, :3]
-        rot_y_pred2   = ortho6d_pred2[:, 3:6]
-        rot_z_pred2   = ortho6d_pred2[:, 6:]
+        rot_x_pred2   = ortho9d_pred2[:, :3]
+        rot_y_pred2   = ortho9d_pred2[:, 3:6]
+        rot_z_pred2   = ortho9d_pred2[:, 6:]
         delta_R       = ortho9d2matrix(rot_x_pred2, rot_y_pred2, rot_z_pred2)
         prediction = {
                 "trans_pred": delta_t,
