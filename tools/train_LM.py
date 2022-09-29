@@ -15,8 +15,8 @@ import torch
 
 BASE_DIR = os.getcwd()
 ROOT_DIR = BASE_DIR
-sys.path.append(os.path.join(ROOT_DIR, 'MPE_LM', "models"))
-sys.path.append(os.path.join(ROOT_DIR, 'MPE_LM', "utils_LM"))
+sys.path.append(os.path.join(ROOT_DIR, "models"))
+sys.path.append(os.path.join(ROOT_DIR, 'LM'))
 
 def get_parser():
     parser = argparse.ArgumentParser(
@@ -61,7 +61,7 @@ def init():
         os.makedirs(log_dir)
     logger = tools_train.get_logger(level_print=logging.INFO, level_save=logging.WARNING, path_file=log_dir+"/training_logger.log")
 
-    tools_train.backup(["tools/train_LM.py", "models/Modules.py", "MPE_LM/models/"+args.model+".py", "LM/"+cfg.hyper_dataset_train.name+".py", args.config], log_dir)
+    tools_train.backup(["tools/train_LM.py", "models/Modules.py", "models/"+args.model+".py", "LM/"+cfg.hyper_dataset_train.name+".py", args.config], log_dir)
     gorilla.utils.set_cuda_visible_devices(gpu_ids = cfg.gpus)
 
     return logger, cfg

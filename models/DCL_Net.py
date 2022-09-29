@@ -251,6 +251,7 @@ class Network(nn.Module):
                     'conf'      : conf.squeeze(1),
                     "Xo_pred"   : Xo_pred.transpose(1,2),
                     "Yc_pred"   : Yc_pred.transpose(1,2),
+                    "F_Xo_p"    : F_Xo_p,
                 }
 
         data["labels"]["points_tmp"] = points_tmp

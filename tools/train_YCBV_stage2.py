@@ -15,7 +15,7 @@ import utils.tools_train as tools_train
 BASE_DIR = os.getcwd()
 ROOT_DIR = BASE_DIR
 sys.path.append(os.path.join(ROOT_DIR, "models"))
-sys.path.append(os.path.join(ROOT_DIR, 'YCBV', "utils_YCBV"))
+sys.path.append(os.path.join(ROOT_DIR, 'YCBV'))
 
 def get_parser():
     parser = argparse.ArgumentParser(

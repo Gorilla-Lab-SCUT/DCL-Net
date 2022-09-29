@@ -1,11 +1,11 @@
 python -m ipdb tools/train_YCBV_stage2.py \
     --path_data datasets/YCB_Video_Dataset \
     --model DCL_Net \
-    --refiner refiner_MLP_conf \
+    --refiner refiner \
     --config configs/config_YCBV_bs40.yaml \
     --config_stage1 configs/config_YCBV_bs32.yaml \
     --gpus 0 \
     --exp_id_stage1 0 \
     --epoch_stage1 84 \
-    --exp_id 10000 \
+    --exp_id 0 \
     --iteration 2
